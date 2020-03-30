@@ -6,7 +6,7 @@
     If you register too frequent Line will block you
 
     * How It Work ?
-    You will send request data to us server
+    You will send request data to our server
     Server will generate request body
     Then you will post request body to Line Server
     And Then you will send Line Server Response
