@@ -36,4 +36,16 @@ else:
     print("Fail to Register")
 ```
 
-Special Thanks to [Crash-override404](https://github.com/crash-override404/linepy-modified).
+PIP requirements
+------------
+```
+base64
+pycryptodome
+urllib
+hashlib
+python-axolotl-curve25519
+requests
+```
+
+
+Special Thanks to [Crash-override404](https://github.com/crash-override404/linepy-modified) for e2ee.
