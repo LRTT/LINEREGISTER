@@ -1,4 +1,4 @@
-# REGISTER PRIMARY [![Status](https://img.shields.io/website?label=API&style=for-the-badge&url=https%3A%2F%2Fusqf.cf%2Fstatus%2FregisterPrimary)]()
+# REGISTER PRIMARY [![Status](https://img.shields.io/uptimerobot/status/m784644197-00960f85a59d732ec38d545d?style=for-the-badge)]()
 Register LINE primary token by using phone number.
 
 Example
