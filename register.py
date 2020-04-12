@@ -23,8 +23,8 @@ import uuid
 
 
 class RegisterConfig:
-    UA = "Line/10.4.2"
-    LA = "ANDROID 10.4.2"
+    UA = "LLA/2.12.0 Nokia 6.1 Plus 10"
+    LA = "ANDROIDLITE 2.12.0 Android OS 10"
     LAL = "en_us"
 
     UDID = uuid.uuid4().hex
