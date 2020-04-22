@@ -32,7 +32,7 @@ class RegisterConfig:
 
 
 class ServerConfig:
-    SERVER_URL = "https://lrtt.icu/registerPrimary.do"
+    SERVER_URL = "https://api.lrtt.icu/registerPrimary.do"
     LINE_HOST = "https://ga2s.line.naver.jp/acct/pais/v1"
 
 
