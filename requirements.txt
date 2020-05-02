@@ -1,3 +1,6 @@
+base64
 pycryptodome
+urllib
+hashlib
 python-axolotl-curve25519
 requests
