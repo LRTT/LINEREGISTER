@@ -1,0 +1,3 @@
+pycryptodome
+python-axolotl-curve25519
+requests
