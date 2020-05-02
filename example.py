@@ -25,6 +25,6 @@ if 2 in getPhoneVerifMethod["availableMethods"]:
     client.setPassword(authSessionId, PASSWORD, private_key, public_key, nonce, exchangeEncryptionKey["public_key"], exchangeEncryptionKey["nonce"])
     registerResult = client.registerPrimaryUsingPhone(authSessionId)
     print("Your Auth Key: " + registerResult["authKey"])
-    print("Your AuthToken: " + registerResult["authToken"])
+    print("Your Auth Token: " + registerResult["authToken"])
 else:
     print("Fail to Register")
