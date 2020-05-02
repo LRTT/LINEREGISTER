@@ -31,21 +31,15 @@ if 2 in getPhoneVerifMethod["availableMethods"]:
     client.setPassword(authSessionId, PASSWORD, private_key, public_key, nonce, exchangeEncryptionKey["public_key"], exchangeEncryptionKey["nonce"])
     registerResult = client.registerPrimaryUsingPhone(authSessionId)
     print("Your Auth Key: " + registerResult["authKey"])
-    print("Your Auth Token: " + registerResult["authToken"])
+    print("Your Auth Key: " + registerResult["authToken"])
 else:
     print("Fail to Register")
 ```
 
-PIP requirements
+Installation
 ------------
+```shell
+$ pip3 install -r requirements.txt
 ```
-base64
-pycryptodome
-urllib
-hashlib
-python-axolotl-curve25519
-requests
-```
-
 
 Special Thanks to [Crash-override404](https://github.com/crash-override404/linepy-modified) for e2ee.
