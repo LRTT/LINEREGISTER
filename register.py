@@ -12,7 +12,7 @@
     And Then you will send Line Server Response
     To parse to json data
 
-    - LRT TEAM
+    - LRTT TEAM
 
 """
 
@@ -21,8 +21,7 @@ import base64
 import requests
 import uuid
 
-
-class RegisterConfig:
+class Config:
     UA = "Line/9.12.0"
     LA = "ANDROID\t9.12.0\tAndroid OS\t10"
     LAL = "en_us"
@@ -30,17 +29,14 @@ class RegisterConfig:
     UDID = uuid.uuid4().hex
     DeviceModel = "Nokia 6.1 Plus"
 
-
-class ServerConfig:
     SERVER_URL = "https://api.lrtt.icu/registerPrimary.do"
-    LINE_HOST = "https://ga2s.line.naver.jp/acct/pais/v1"
-
+    LINE_HOST = "https://gxx.line.naver.jp/acct/pais/v1"
 
 class LineRegister:
     def __init__(self, phoneNumber, countryCode):
         self.deviceInfo = {
-            "udid": RegisterConfig.UDID,
-            "deviceModel": RegisterConfig.DeviceModel,
+            "udid": Config.UDID,
+            "deviceModel": Config.DeviceModel,
         }
 
         self.phoneInfo = {
@@ -49,58 +45,116 @@ class LineRegister:
         }
 
         self.headers = {
-            "User-Agent": RegisterConfig.UA,
-            "X-Line-Application": RegisterConfig.LA,
-            "X-lal": RegisterConfig.LAL
+            "User-Agent": Config.UA,
+            "X-Line-Application": Config.LA,
+            "X-lal": Config.LAL
         }
+        
+    def post(self, raw_data):
+        return requests.post(Config.LINE_HOST, data=raw_data, headers=self.headers).content
 
-    def postRequest(self, data):
-        # here you can modify to use proxy to register !
-        return requests.post(ServerConfig.LINE_HOST, data=data, headers=self.headers).content
+    def gen(self, method, data):
+        return requests.post(Config.SERVER_URL + "/generate", json={**{"method": method}, **data}).content
 
-    def generateRequestData(self, method, data={}):
-        return requests.post(ServerConfig.SERVER_URL + "/generate", json={**{"method": method}, **data}).content
-
-    def parseResponseData(self, method, data):
-        response = requests.post(ServerConfig.SERVER_URL + "/parse?method=%s" % (method), data=data).json()
+    def parse(self, method, raw_data):
+        response = requests.post(Config.SERVER_URL + "/parse", params={"method": method}, data=raw_data).json()
         if response["status"] == 200:
             return response
-        if "error" in response:
-            raise Exception(response["error"])
         raise Exception(response)
+        
+METHODS = {
+    'openSession': {
+        'args': [],
+    },
+    'getPhoneVerifMethod': {
+        'args': [
+            'authSessionId'
+        ],
+        'self': [
+            'deviceInfo',
+            'phoneInfo'
+        ]
+    },
+    'sendPinCodeForPhone': {
+        'args': [
+            'authSessionId',
+            'verifMethod'
+        ],
+        'self': [
+            'deviceInfo',
+            'phoneInfo'
+        ]
+    },
+    'verifyPhone': {
+        'args': [
+            'authSessionId',
+            'pinCode'
+        ],
+        'self': [
+            'deviceInfo',
+            'phoneInfo'
+        ]
+    },
+    'validateProfile': {
+        'args': [
+            'authSessionId'
+        ]
+    },
+    'exchangeEncryptionKey': {
+        'args': [
+            'authSessionId',
+            'public_key',
+            'nonce'
+        ]
+    },
+    'setPassword': {
+        'args': [
+            'authSessionId',
+            'password',
+            'private_key',
+            'public_key',
+            'nonce',
+            'server_public_key',
+            'server_nonce'
+        ]
+    },
+    'registerPrimaryUsingPhone': {
+        'args': [
+            'authSessionId'
+        ]
+    }
+}
+        
+for method in METHODS:
+    def create_method(method_name, method_data):
+        def wrapper(cls, *args, **kwargs):
+            data = {}
+            if 'args' in method_data:
+                for index, arg in enumerate(args):
+                    data[method_data['args'][index]] = arg
+                for key, value in kwargs.items():
+                    assert key not in data or key not in method_data['args'], '%s already set or %s is invaild args' % (key, key)
+                    data[key] = value
+            if 'self' in method_data:
+                for s_arg in method_data['self']:
+                    data[s_arg] = getattr(cls, s_arg)
+            return cls.parse(method_name, cls.post(cls.gen(method_name, data)))
+        return wrapper
+    setattr(LineRegister, method, create_method(method, METHODS[method]))
 
-    def openSession(self):
-        return self.parseResponseData("openSession", self.postRequest(self.generateRequestData("openSession")))
-
-    def getPhoneVerifMethod(self, authSessionId):
-        return self.parseResponseData("getPhoneVerifMethod", self.postRequest(self.generateRequestData("getPhoneVerifMethod", {"authSessionId": authSessionId, "deviceInfo": self.deviceInfo, "phoneInfo": self.phoneInfo})))
-
-    def sendPinCodeForPhone(self, authSessionId, verifMethod):
-        return self.parseResponseData("sendPinCodeForPhone", self.postRequest(self.generateRequestData("sendPinCodeForPhone", {"authSessionId": authSessionId, "deviceInfo": self.deviceInfo, "phoneInfo": self.phoneInfo, "verifMethod": verifMethod})))
-
-    def verifyPhone(self, authSessionId, pinCode):
-        return self.parseResponseData("verifyPhone", self.postRequest(self.generateRequestData("verifyPhone", {"authSessionId": authSessionId, "deviceInfo": self.deviceInfo, "phoneInfo": self.phoneInfo, "pinCode": pinCode})))
-
-    def validateProfile(self, authSessionId):
-        return self.parseResponseData("validateProfile", self.postRequest(self.generateRequestData("validateProfile", {"authSessionId": authSessionId})))
-
-    def exchangeEncryptionKey(self, authSessionId, public_key, nonce):
-        return self.parseResponseData("exchangeEncryptionKey", self.postRequest(self.generateRequestData("exchangeEncryptionKey", {"authSessionId": authSessionId, "public_key": public_key, "nonce": nonce})))
-
-    def setPassword(self, authSessionId, password, private_key, public_key, nonce, server_public_key, server_nonce):
-        return self.parseResponseData("setPassword", self.postRequest(self.generateRequestData("setPassword", {"authSessionId": authSessionId, "password": password, "private_key": private_key, "public_key": public_key, "nonce": nonce, "server_public_key": server_public_key, "server_nonce": server_nonce})))
-
-    def registerPrimaryUsingPhone(self, authSessionId):
-        return self.parseResponseData("registerPrimaryUsingPhone", self.postRequest(self.generateRequestData("registerPrimaryUsingPhone", {"authSessionId": authSessionId})))
+del METHODS
 
 if __name__ == "__main__":
-    password = "YOUR_LINE_PASSWORD"
-    
-    client = LineRegister("YOUR_PHONE_NUMBER", "YOUR_COUNTRY_CODE")
-    
+    print("""
+    LINE register by LRTT
+    """)
+    phoneNumber = input("Phone Number: ") # 080xxxxxxx
+    countryCode = input("Country Code: ") # TH (example)
+    client = LineRegister(phoneNumber, countryCode)
+
     openSession = client.openSession()
     authSessionId = openSession["authSessionId"]
-    
+
     getPhoneVerifMethod = client.getPhoneVerifMethod(authSessionId)
     if 2 not in getPhoneVerifMethod["availableMethods"]:
         raise Exception("Can't Register With This Phone Number :(")
@@ -108,9 +162,18 @@ if __name__ == "__main__":
     sendPinCodeForPhone = client.sendPinCodeForPhone(authSessionId, 2)
     if sendPinCodeForPhone["status"] != 200:
         raise Exception("Fail to sendPinCodeForPhone")
-    PIN = input("Pin Code: ")
-    
-    verifyPhone = client.verifyPhone(authSessionId, PIN)
+
+    while True: # verify pin (phone)
+        try:
+            PIN = input("Pin Code: ")
+            verifyPhone = client.verifyPhone(authSessionId, PIN)
+            break
+        except Exception as err:
+            err = str(err)
+            if 'code=45' in err or 'code=2' in err: # (INVALID_PIN_CODE, DB_FAILED)
+                print('invaild pin Code')
+                continue
+            raise err
 
     validateProfile = client.validateProfile(authSessionId)
 
@@ -122,6 +185,19 @@ if __name__ == "__main__":
 
     exchangeEncryptionKey = client.exchangeEncryptionKey(authSessionId, public_key, nonce)
 
-    setPassword = client.setPassword(authSessionId, password, private_key, public_key, nonce, exchangeEncryptionKey["public_key"], exchangeEncryptionKey["nonce"])
-    
-    print(client.registerPrimaryUsingPhone(authSessionId))
+    while True: # set password
+        try:
+            password = input('Password: ')
+            setPassword = client.setPassword(authSessionId, password, private_key, public_key, nonce, exchangeEncryptionKey["public_key"], exchangeEncryptionKey["nonce"])
+            break
+        except Exception as err:
+            err = str(err) 
+            if 'code=1' in err: # (ILLEGAL_ARGUMENT), maybe invaild password format
+                print(err.split("alertMessage='")[1].split("',")[0])
+                continue
+            raise err
+
+    registerResult = client.registerPrimaryUsingPhone(authSessionId)
+
+    print("Auth Key: " + registerResult["authKey"])
+    print("Auth Token: " + registerResult["authToken"])
